@@ -1,0 +1,38 @@
+
+> civicfix-backend@1.0.0 start
+> node src/index.js
+
+CivicFix API listening on http://localhost:5000
+[0mGET /api/health [32m200[0m 10.576 ms - 49[0m
+[0mGET /api/health [32m200[0m 0.806 ms - 49[0m
+[0mGET /api/categories [32m200[0m 18.301 ms - 1622[0m
+[0mGET /api/categories [32m200[0m 4.913 ms - 1622[0m
+[0mGET /api/reports?limit=6&sort=newest [32m200[0m 10.919 ms - 2366[0m
+[0mGET /api/categories [36m304[0m 7.366 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 14.659 ms - -[0m
+[0mGET /api/health [32m200[0m 0.501 ms - 49[0m
+[0mGET /favicon.ico [33m404[0m 1.126 ms - 47[0m
+[0mGET /api/categories [32m200[0m 20.938 ms - 1622[0m
+[0mGET /api/auth/me [33m401[0m 15.756 ms - 36[0m
+[0mGET /api/reports?limit=6&sort=newest [32m200[0m 57.405 ms - 2366[0m
+[0mGET /api/categories [36m304[0m 5.682 ms - -[0m
+[0mGET /api/auth/me [33m401[0m 9.137 ms - 36[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 8.816 ms - -[0m
+[0mGET /api/categories [36m304[0m 2.801 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 9.472 ms - -[0m
+[0mGET /api/categories [36m304[0m 4.724 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 5.953 ms - -[0m
+[0mGET /api/categories [36m304[0m 2.670 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 13.062 ms - -[0m
+[0mGET /api/categories [36m304[0m 5.693 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 7.138 ms - -[0m
+[0mGET /api/categories [36m304[0m 2.855 ms - -[0m
+[0mGET /api/reports?search=&category=&status=&priority=&sort=newest&page=1&limit=9 [32m200[0m 5.031 ms - 2366[0m
+[0mGET /api/categories [36m304[0m 2.453 ms - -[0m
+[0mGET /api/reports?search=&category=&status=&priority=&sort=newest&page=1&limit=9 [36m304[0m 4.228 ms - -[0m
+[0mGET /api/reports?status=&limit=100 [32m200[0m 5.415 ms - 2368[0m
+[0mGET /api/reports?status=&limit=100 [36m304[0m 5.529 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 7.623 ms - -[0m
+[0mGET /api/categories [36m304[0m 8.083 ms - -[0m
+[0mGET /api/reports?limit=6&sort=newest [36m304[0m 7.848 ms - -[0m
+[0mGET /api/categories [36m304[0m 2.897 ms - -[0m
