@@ -6,7 +6,7 @@ them through an admin dashboard.
 
 ```
 civicfix/
-├── backend/     Express API + Prisma + SQLite (or Postgres)
+├── backend/     Express API + Prisma + PostgreSQL
 └── frontend/    React (Vite) + Tailwind + Leaflet + Recharts
 ```
 
@@ -16,6 +16,7 @@ civicfix/
 - **Reports** — full CRUD, image upload, search/filter/sort/pagination, status timeline, comments, save/favorite
 - **Map** — Leaflet + OpenStreetMap, color-coded markers, click-to-pin location picker with "use my location"
 - **Admin dashboard** — stat cards, charts (reports by month/category/status, resolution rate), recent reports/users tables, CSV export, category & user management
+- **AI features** — report analysis, staff recommendations, AI-assisted report writing, and natural-language report search
 - **Citizen dashboard** — my reports, saved reports, activity timeline, personal stats, profile & settings
 - **Notifications** — in-app notifications on status changes and new comments
 - **Design** — a custom "civic paper / ticket stub" visual system (see Design notes below), dark-mode-ready Tailwind tokens, loading skeletons, empty states, toasts
@@ -25,7 +26,6 @@ civicfix/
 - **Image storage** uses local disk (`backend/src/uploads`) via Multer, not Cloudinary. Swapping to Cloudinary only touches `backend/src/middleware/upload.js` — see the snippet below.
 - **Email** (password reset, verification) logs to the server console instead of sending. Swap in SendGrid/SES/Postmark in `auth.controller.js`.
 - **Real-time** — Socket.io is wired up server-side (`src/index.js`, rooms per report) and the client dependency is installed, but live-push events aren't emitted from every mutation yet. Notifications currently work via polling on page load. Extending this is a matter of calling `io.to(`report:${id}`).emit(...)` from the relevant controllers and subscribing in the frontend.
-- **AI bonus features** (auto-categorization, duplicate detection, severity estimation, translation, etc.) are not implemented — they're a good follow-up once the core platform is running.
 
 ## Quick start
 
@@ -33,7 +33,7 @@ civicfix/
 
 ```bash
 cd backend
-cp .env.example .env       # defaults to SQLite, no config needed
+cp .env.example .env       # set DATABASE_URL and OPENAI_API_KEY
 npm install
 npx prisma generate
 npx prisma migrate dev --name init
@@ -56,19 +56,6 @@ npm run dev                  # http://localhost:5173
 
 The Vite dev server proxies `/api` and `/uploads` to `http://localhost:5000`, so run the backend first.
 
-## Switching to Postgres (Neon / Supabase)
-
-1. In `backend/prisma/schema.prisma`, change:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-2. In `backend/.env`, set `DATABASE_URL` to your Postgres connection string.
-3. Run `npx prisma migrate dev --name init` again.
-
-No other code changes are needed — the rest of the app talks to Prisma, not the database directly.
 
 ## Swapping local uploads for Cloudinary
 
@@ -130,3 +117,4 @@ vocabulary of civic offices, without going full skeuomorphic.
 - Email is stubbed to console output.
 - No automated test suite included.
 - SQLite is used by default for zero-config setup; swap to Postgres for production per the instructions above.
+

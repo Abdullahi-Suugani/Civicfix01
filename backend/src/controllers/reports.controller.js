@@ -1,4 +1,5 @@
 const prisma = require("../utils/prisma");
+const { analyzeReport, improveReportDescription, parseReportSearch } = require("../services/ai.service");
 
 function parseImages(report) {
   if (!report) return report;
@@ -18,6 +19,7 @@ async function listReports(req, res, next) {
   try {
     const {
       search,
+      aiSearch,
       category,
       status,
       priority,
@@ -27,17 +29,38 @@ async function listReports(req, res, next) {
       limit = 12,
     } = req.query;
 
-    const where = {};
-    if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { address: { contains: search } },
-      ];
+    let parsedAiSearch = null;
+    if (aiSearch) {
+      try {
+        parsedAiSearch = await parseReportSearch(aiSearch);
+      } catch (err) {
+        parsedAiSearch = { search: aiSearch, category: "", priority: "", status: "", locationHint: "" };
+      }
     }
-    if (category) where.categoryId = category;
-    if (status) where.status = status;
-    if (priority) where.priority = priority;
+
+    const textSearch = search || parsedAiSearch?.search || parsedAiSearch?.locationHint;
+    const where = { AND: [] };
+    if (textSearch) {
+      where.AND.push({
+        OR: [
+          { title: { contains: textSearch, mode: "insensitive" } },
+          { description: { contains: textSearch, mode: "insensitive" } },
+          { address: { contains: textSearch, mode: "insensitive" } },
+          { aiSummary: { contains: textSearch, mode: "insensitive" } },
+          { aiRecommendation: { contains: textSearch, mode: "insensitive" } },
+        ],
+      });
+    }
+    if (category) where.AND.push({ categoryId: category });
+    if (!category && parsedAiSearch?.category) {
+      where.AND.push({ category: { name: { contains: parsedAiSearch.category, mode: "insensitive" } } });
+    }
+    if (status || parsedAiSearch?.status) where.AND.push({ status: status || parsedAiSearch.status });
+    if (priority || parsedAiSearch?.priority) {
+      const selectedPriority = priority || parsedAiSearch.priority;
+      where.AND.push({ OR: [{ priority: selectedPriority }, { aiPriority: selectedPriority }] });
+    }
+    if (!where.AND.length) delete where.AND;
     if (userId) where.userId = userId;
 
     const orderBy =
@@ -67,6 +90,7 @@ async function listReports(req, res, next) {
 
     res.json({
       reports: reports.map(parseImages),
+      aiSearch: parsedAiSearch,
       pagination: {
         total,
         page: Number(page),
@@ -123,6 +147,28 @@ async function createReport(req, res, next) {
     }
 
     const uploadedFiles = (req.files || []).map((f) => `/uploads/${f.filename}`);
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+
+    let aiData = { aiStatus: "SKIPPED" };
+    try {
+      const analysis = await analyzeReport({
+        title,
+        description,
+        categoryName: category?.name,
+        priority: priority || "MEDIUM",
+        address,
+      });
+      aiData = {
+        aiSummary: analysis.summary,
+        aiCategory: analysis.category,
+        aiPriority: analysis.priority,
+        aiRecommendation: analysis.recommendedAction,
+        aiStatus: "COMPLETED",
+        aiAnalyzedAt: new Date(),
+      };
+    } catch (err) {
+      aiData = { aiStatus: err.code === "OPENAI_NOT_CONFIGURED" ? "SKIPPED" : "FAILED" };
+    }
 
     const report = await prisma.report.create({
       data: {
@@ -136,6 +182,7 @@ async function createReport(req, res, next) {
         images: JSON.stringify(uploadedFiles),
         isAnonymous: isAnonymous === "true" || isAnonymous === true,
         userId: req.user.id,
+        ...aiData,
         timelineEvents: { create: [{ status: "PENDING", note: "Report submitted." }] },
       },
       include: { category: true },
@@ -143,6 +190,23 @@ async function createReport(req, res, next) {
 
     res.status(201).json({ report: parseImages(report) });
   } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/reports/ai/improve
+async function improveDescription(req, res, next) {
+  try {
+    const { title, description } = req.body;
+    if (!description?.trim()) {
+      return res.status(400).json({ message: "Description is required." });
+    }
+    const improvedDescription = await improveReportDescription({ title, description });
+    res.json({ improvedDescription });
+  } catch (err) {
+    if (err.code === "OPENAI_NOT_CONFIGURED") {
+      return res.status(503).json({ message: "AI writing assistant is not configured yet." });
+    }
     next(err);
   }
 }
@@ -281,8 +345,13 @@ module.exports = {
   listReports,
   getReport,
   createReport,
+  improveDescription,
   updateReport,
   deleteReport,
   toggleSaveReport,
   listSavedReports,
 };
+
+
+
+

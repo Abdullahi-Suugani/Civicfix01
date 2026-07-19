@@ -5,6 +5,7 @@ const { requireAuth, optionalAuth } = require("../middleware/auth");
 const { upload } = require("../middleware/upload");
 
 router.get("/mine/saved", requireAuth, ctrl.listSavedReports);
+router.post("/ai/improve", requireAuth, ctrl.improveDescription);
 
 router.get("/", optionalAuth, ctrl.listReports);
 router.get("/:id", optionalAuth, ctrl.getReport);
@@ -14,3 +15,4 @@ router.delete("/:id", requireAuth, ctrl.deleteReport);
 router.post("/:id/save", requireAuth, ctrl.toggleSaveReport);
 
 module.exports = router;
+

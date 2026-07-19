@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -75,6 +75,12 @@ model Report {
   userId       String?
   department   Department?  @relation(fields: [departmentId], references: [id])
   departmentId String?
+  aiSummary    String?
+  aiCategory   String?
+  aiPriority   String?
+  aiRecommendation String?
+  aiStatus     String       @default("PENDING")
+  aiAnalyzedAt DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -131,3 +137,5 @@ model Notification {
 
   @@map("notifications")
 }
+
+

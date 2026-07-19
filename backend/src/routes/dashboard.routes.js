@@ -18,7 +18,9 @@ router.get("/statistics", requireAuth, requireRole("ADMIN", "MODERATOR"), async 
       newToday,
       byCategory,
       byStatus,
+      byAiCategory,
       recentReports,
+      highPriorityReports,
       recentUsers,
     ] = await Promise.all([
       prisma.report.count(),
@@ -29,8 +31,21 @@ router.get("/statistics", requireAuth, requireRole("ADMIN", "MODERATOR"), async 
       prisma.report.count({ where: { createdAt: { gte: startOfToday } } }),
       prisma.report.groupBy({ by: ["categoryId"], _count: { _all: true } }),
       prisma.report.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.report.groupBy({
+        by: ["aiCategory"],
+        where: { aiCategory: { not: null } },
+        _count: { _all: true },
+      }),
       prisma.report.findMany({
         take: 8,
+        orderBy: { createdAt: "desc" },
+        include: { category: true, user: { select: { fullName: true } } },
+      }),
+      prisma.report.findMany({
+        take: 8,
+        where: {
+          OR: [{ priority: { in: ["HIGH", "CRITICAL"] } }, { aiPriority: { in: ["HIGH", "CRITICAL"] } }],
+        },
         orderBy: { createdAt: "desc" },
         include: { category: true, user: { select: { fullName: true } } },
       }),
@@ -83,12 +98,30 @@ router.get("/statistics", requireAuth, requireRole("ADMIN", "MODERATOR"), async 
           count: c._count._all,
         })),
         reportsByStatus: byStatus.map((s) => ({ status: s.status, count: s._count._all })),
+        reportsByAiCategory: byAiCategory.map((c) => ({
+          category: c.aiCategory || "Unknown",
+          count: c._count._all,
+        })),
         reportsByMonth: Object.entries(monthly).map(([month, count]) => ({ month, count })),
         resolutionRate: totalReports ? Math.round((resolvedReports / totalReports) * 100) : 0,
       },
       tables: {
         recentReports,
+        highPriorityReports,
         recentUsers,
+      },
+      ai: {
+        summaries: recentReports.filter((r) => r.aiSummary).map((r) => ({
+          id: r.id,
+          title: r.title,
+          summary: r.aiSummary,
+        })),
+        recommendations: highPriorityReports.filter((r) => r.aiRecommendation).map((r) => ({
+          id: r.id,
+          title: r.title,
+          priority: r.aiPriority || r.priority,
+          recommendation: r.aiRecommendation,
+        })),
       },
     });
   } catch (err) {
@@ -97,3 +130,4 @@ router.get("/statistics", requireAuth, requireRole("ADMIN", "MODERATOR"), async 
 });
 
 module.exports = router;
+
