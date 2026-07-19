@@ -1,15 +1,12 @@
 // CivicFix database schema
-// Default datasource is SQLite for zero-config local/dev use.
-// Swap provider to "postgresql" and set DATABASE_URL to a Postgres
-// connection string (e.g. Neon/Supabase) for production — no model
-// changes are required, SQLite and Postgres both work with this schema.
+// PostgreSQL is the standard database for local development and production.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -137,5 +134,6 @@ model Notification {
 
   @@map("notifications")
 }
+
 
 
