@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { Search, LayoutGrid, List, SlidersHorizontal, Sparkles } from "lucide-react";
 import api from "../api/client";
 import ReportCard from "../components/ReportCard";
 import { ReportGridSkeleton } from "../components/Skeletons";
@@ -17,8 +17,10 @@ export default function Reports() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("grid");
+  const [aiSearchInfo, setAiSearchInfo] = useState(null);
 
   const search = searchParams.get("search") || "";
+  const aiSearch = searchParams.get("aiSearch") || "";
   const category = searchParams.get("category") || "";
   const status = searchParams.get("status") || "";
   const priority = searchParams.get("priority") || "";
@@ -36,13 +38,14 @@ export default function Reports() {
   const fetchReports = useCallback(() => {
     setLoading(true);
     api
-      .get("/reports", { params: { search, category, status, priority, sort, page, limit: 9 } })
+      .get("/reports", { params: { search, aiSearch, category, status, priority, sort, page, limit: 9 } })
       .then(({ data }) => {
         setReports(data.reports);
         setPagination(data.pagination);
+        setAiSearchInfo(data.aiSearch || null);
       })
       .finally(() => setLoading(false));
-  }, [search, category, status, priority, sort, page]);
+  }, [search, aiSearch, category, status, priority, sort, page]);
 
   useEffect(() => {
     fetchReports();
@@ -65,6 +68,26 @@ export default function Reports() {
       </div>
 
       {/* Search + toggle */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Sparkles size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-civic-teal" />
+          <input
+            defaultValue={aiSearch}
+            onKeyDown={(e) => e.key === "Enter" && updateParam("aiSearch", e.currentTarget.value)}
+            onBlur={(e) => updateParam("aiSearch", e.currentTarget.value)}
+            placeholder="Ask AI: Show urgent road problems near the university"
+            className="input pl-9"
+          />
+        </div>
+      </div>
+
+      {aiSearchInfo && (
+        <p className="mb-4 text-xs text-civic-mist">
+          AI interpreted this as: {aiSearchInfo.priority || "any priority"} {aiSearchInfo.category || "issues"}
+          {aiSearchInfo.locationHint ? ` near ${aiSearchInfo.locationHint}` : ""}.
+        </p>
+      )}
+
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-civic-mist" />
@@ -208,3 +231,4 @@ export default function Reports() {
     </div>
   );
 }
+

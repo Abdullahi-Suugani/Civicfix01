@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Locate, Upload, X, Send } from "lucide-react";
+import { Locate, Upload, Send, Sparkles } from "lucide-react";
 import api from "../api/client";
 import ReportsMap from "../components/ReportsMap";
 import { PRIORITIES } from "../constants";
@@ -26,6 +26,7 @@ export default function SubmitReport() {
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [improving, setImproving] = useState(false);
 
   useEffect(() => {
     api.get("/categories").then(({ data }) => setCategories(data.categories));
@@ -63,6 +64,26 @@ export default function SubmitReport() {
     const selected = Array.from(e.target.files).slice(0, 5);
     setFiles(selected);
     setPreviews(selected.map((f) => URL.createObjectURL(f)));
+  }
+
+  async function improveDescription() {
+    if (!form.description.trim()) {
+      toast.error("Add a description first.");
+      return;
+    }
+    setImproving(true);
+    try {
+      const { data } = await api.post("/reports/ai/improve", {
+        title: form.title,
+        description: form.description,
+      });
+      setForm((current) => ({ ...current, description: data.improvedDescription }));
+      toast.success("Description improved with AI.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Couldn't improve the description.");
+    } finally {
+      setImproving(false);
+    }
   }
 
   async function onSubmit(e) {
@@ -121,7 +142,12 @@ export default function SubmitReport() {
         </div>
 
         <div>
-          <label className="label">Description</label>
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <label className="label !mb-0">Description</label>
+            <button type="button" onClick={improveDescription} className="btn-ghost !px-2 !py-1 text-xs" disabled={improving}>
+              <Sparkles size={13} /> {improving ? "Improving..." : "Improve with AI"}
+            </button>
+          </div>
           <textarea
             required
             rows={4}
@@ -230,3 +256,4 @@ export default function SubmitReport() {
     </div>
   );
 }
+

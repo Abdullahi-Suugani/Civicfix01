@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FileText, Clock, CheckCircle2, Users2, Tags, TrendingUp,
+  FileText, Clock, CheckCircle2, Users2, Tags, TrendingUp, AlertTriangle, Sparkles,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -11,6 +11,7 @@ import api from "../api/client";
 import AdminNav from "../components/AdminNav";
 import { StatCardSkeleton } from "../components/Skeletons";
 import StatusBadge from "../components/StatusBadge";
+import PriorityBadge from "../components/PriorityBadge";
 import { format } from "date-fns";
 
 const PIE_COLORS = ["#16324A", "#2F6690", "#0E7C7B", "#2F9E44", "#E8A33D", "#D64545", "#6B7686"];
@@ -54,6 +55,93 @@ export default function AdminDashboard() {
 
       {!loading && data && (
         <>
+
+          <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="card lg:col-span-2">
+              <h3 className="flex items-center gap-2 border-b border-civic-line p-4 font-display text-sm font-semibold uppercase tracking-wide text-civic-mist">
+                <AlertTriangle size={15} /> High-priority issues
+              </h3>
+              <div className="divide-y divide-civic-line">
+                {data.tables.highPriorityReports.length === 0 ? (
+                  <p className="p-4 text-sm text-civic-mist">No high-priority issues on deck.</p>
+                ) : (
+                  data.tables.highPriorityReports.map((r) => (
+                    <Link key={r.id} to={`/reports/${r.id}`} className="flex items-center justify-between gap-3 p-3 hover:bg-civic-navy/5">
+                      <div>
+                        <p className="text-sm font-medium text-civic-ink line-clamp-1">{r.title}</p>
+                        <p className="text-xs text-civic-mist line-clamp-1">{r.aiSummary || r.description}</p>
+                      </div>
+                      <PriorityBadge priority={r.aiPriority || r.priority} />
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <h3 className="mb-4 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-civic-mist">
+                <Sparkles size={15} /> AI categories
+              </h3>
+              <div className="space-y-3">
+                {data.charts.reportsByAiCategory.length === 0 ? (
+                  <p className="text-sm text-civic-mist">AI analysis will appear as new reports arrive.</p>
+                ) : (
+                  data.charts.reportsByAiCategory.slice(0, 5).map((c) => (
+                    <div key={c.category}>
+                      <div className="flex items-center justify-between text-xs text-civic-mist">
+                        <span>{c.category}</span>
+                        <span>{c.count}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-civic-line">
+                        <div className="h-full bg-civic-teal" style={{ width: `${Math.min(c.count * 18, 100)}%` }} />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <div className="card">
+              <h3 className="border-b border-civic-line p-4 font-display text-sm font-semibold uppercase tracking-wide text-civic-mist">
+                AI-generated summaries
+              </h3>
+              <div className="divide-y divide-civic-line">
+                {data.ai.summaries.length === 0 ? (
+                  <p className="p-4 text-sm text-civic-mist">No AI summaries yet.</p>
+                ) : (
+                  data.ai.summaries.map((item) => (
+                    <Link key={item.id} to={`/reports/${item.id}`} className="block p-3 hover:bg-civic-navy/5">
+                      <p className="text-sm font-medium text-civic-ink line-clamp-1">{item.title}</p>
+                      <p className="mt-1 text-xs text-civic-mist">{item.summary}</p>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="card">
+              <h3 className="border-b border-civic-line p-4 font-display text-sm font-semibold uppercase tracking-wide text-civic-mist">
+                AI recommendations
+              </h3>
+              <div className="divide-y divide-civic-line">
+                {data.ai.recommendations.length === 0 ? (
+                  <p className="p-4 text-sm text-civic-mist">Recommendations will appear for analyzed priority reports.</p>
+                ) : (
+                  data.ai.recommendations.map((item) => (
+                    <Link key={item.id} to={`/reports/${item.id}`} className="block p-3 hover:bg-civic-navy/5">
+                      <div className="mb-1 flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium text-civic-ink line-clamp-1">{item.title}</p>
+                        <PriorityBadge priority={item.priority} />
+                      </div>
+                      <p className="text-xs text-civic-mist">{item.recommendation}</p>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
           <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="card p-5">
               <h3 className="mb-4 font-display text-sm font-semibold uppercase tracking-wide text-civic-mist">
@@ -151,3 +239,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
