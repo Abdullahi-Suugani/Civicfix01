@@ -1,120 +1,349 @@
-# CivicFix — Community Problem Reporting Platform
+# CivicFix AI
 
-A full-stack scaffold for CivicFix: citizens report public infrastructure
-issues with photos and a map pin; city staff track, prioritize, and resolve
-them through an admin dashboard.
+### AI-Powered Community Problem Reporting Platform
 
-```
+CivicFix AI is a full-stack web application that empowers citizens to report public infrastructure issues while enabling local governments to efficiently manage, prioritize, and resolve them.
+
+The platform combines Artificial Intelligence, Geographic Information Systems (GIS), and modern web technologies to improve communication between communities and government agencies.
+
+---
+
+## Problem
+
+Many communities struggle to report public infrastructure problems effectively. Traditional reporting methods such as phone calls, paper forms, and social media often result in:
+
+- Slow response times
+- Lost or duplicate reports
+- Lack of transparency
+- Poor communication between citizens and authorities
+- Difficulty identifying high-priority issues
+
+---
+
+## Solution
+
+CivicFix AI provides a centralized digital platform where citizens can report issues with precise locations and photos, while government officials can monitor, analyze, and resolve them through an intelligent administrative dashboard.
+
+---
+
+## Features
+
+### Citizen Portal
+
+- User Registration & Login
+- JWT Authentication
+- Report Public Issues
+- Upload Multiple Images
+- Interactive Map Location Picker
+- Use Current GPS Location
+- View Personal Reports
+- Save Favorite Reports
+- Comment on Reports
+- Report Timeline
+- Notifications
+- Profile Management
+
+---
+
+### Administrator Dashboard
+
+- Dashboard Analytics
+- Manage Reports
+- Manage Categories
+- Manage Users
+- View Resolution Statistics
+- Export Reports as CSV
+- Interactive Charts
+- Report Status Management
+
+---
+
+## AI Features
+
+- AI-generated report summaries
+- Automatic issue categorization
+- Priority recommendation
+- Staff action recommendations
+- AI-assisted report writing
+- Natural language report search
+
+---
+
+## Technology Stack
+
+### Frontend
+
+- React
+- Vite
+- Tailwind CSS
+- Leaflet
+- Recharts
+- Axios
+
+### Backend
+
+- Node.js
+- Express.js
+- Prisma ORM
+- PostgreSQL
+- JWT
+- bcrypt
+
+### Database
+
+- PostgreSQL
+- Supabase
+
+### AI
+
+- OpenAI GPT API
+
+---
+
+## Project Structure
+
+```text
 civicfix/
-├── backend/     Express API + Prisma + PostgreSQL
-└── frontend/    React (Vite) + Tailwind + Leaflet + Recharts
+│
+├── backend/
+│   ├── prisma/
+│   ├── src/
+│   ├── uploads/
+│   └── package.json
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+└── README.md
 ```
 
-## What's included
+---
 
-- **Auth** — register/login/logout, forgot/reset password, JWT + bcrypt, role-based access control (Citizen / Moderator / Admin)
-- **Reports** — full CRUD, image upload, search/filter/sort/pagination, status timeline, comments, save/favorite
-- **Map** — Leaflet + OpenStreetMap, color-coded markers, click-to-pin location picker with "use my location"
-- **Admin dashboard** — stat cards, charts (reports by month/category/status, resolution rate), recent reports/users tables, CSV export, category & user management
-- **AI features** — report analysis, staff recommendations, AI-assisted report writing, and natural-language report search
-- **Citizen dashboard** — my reports, saved reports, activity timeline, personal stats, profile & settings
-- **Notifications** — in-app notifications on status changes and new comments
-- **Design** — a custom "civic paper / ticket stub" visual system (see Design notes below), dark-mode-ready Tailwind tokens, loading skeletons, empty states, toasts
+## Installation
 
-## What's stubbed (documented, not wired to a real provider)
+### 1. Clone Repository
 
-- **Image storage** uses local disk (`backend/src/uploads`) via Multer, not Cloudinary. Swapping to Cloudinary only touches `backend/src/middleware/upload.js` — see the snippet below.
-- **Email** (password reset, verification) logs to the server console instead of sending. Swap in SendGrid/SES/Postmark in `auth.controller.js`.
-- **Real-time** — Socket.io is wired up server-side (`src/index.js`, rooms per report) and the client dependency is installed, but live-push events aren't emitted from every mutation yet. Notifications currently work via polling on page load. Extending this is a matter of calling `io.to(`report:${id}`).emit(...)` from the relevant controllers and subscribing in the frontend.
+```bash
+git clone https://github.com/yourusername/civicfix.git
 
-## Quick start
+cd civicfix
+```
 
-### 1. Backend
+---
+
+### 2. Backend Setup
 
 ```bash
 cd backend
-cp .env.example .env       # set DATABASE_URL and OPENAI_API_KEY
+
 npm install
+
+cp .env.example .env
+
 npx prisma generate
+
 npx prisma migrate dev --name init
-npm run seed                # creates categories + demo admin/citizen + sample reports
-npm run dev                  # http://localhost:5000
+
+npm run seed
+
+npm run dev
 ```
 
-Demo logins after seeding:
+Backend runs at:
 
-- Admin: `admin@civicfix.gov` / `Admin123!`
-- Citizen: `citizen@example.com` / `Citizen123!`
+```
+http://localhost:5000
+```
 
-### 2. Frontend
+---
+
+### 3. Frontend Setup
 
 ```bash
-cd frontend
+cd ../frontend
+
 npm install
-npm run dev                  # http://localhost:5173
+
+npm run dev
 ```
 
-The Vite dev server proxies `/api` and `/uploads` to `http://localhost:5000`, so run the backend first.
+Frontend runs at:
 
-
-## Swapping local uploads for Cloudinary
-
-```bash
-npm install cloudinary multer-storage-cloudinary
+```
+http://localhost:5173
 ```
 
-```js
-// backend/src/middleware/upload.js
-const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+---
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+## Environment Variables
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: { folder: "civicfix" },
-});
+Create a `.env` file inside the **backend** folder.
+
+```env
+DATABASE_URL=your_supabase_database_url
+DIRECT_URL=your_supabase_direct_url
+
+JWT_SECRET=your_secret_key
+JWT_EXPIRES_IN=7d
+
+OPENAI_API_KEY=your_openai_api_key
+
+CLIENT_URL=http://localhost:5173
 ```
 
-Everywhere else in the app already just stores/returns a URL string, so this is a drop-in swap.
+---
 
-## API overview
+## API Endpoints
 
-| Method          | Route                                                                            | Notes                                       |
-| --------------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
-| POST            | `/api/auth/register`, `/login`, `/logout`, `/forgot-password`, `/reset-password` |                                             |
-| GET             | `/api/auth/me`                                                                   | current user                                |
-| GET/POST        | `/api/reports`                                                                   | list (search/filter/sort/paginate) & create |
-| GET/PUT/DELETE  | `/api/reports/:id`                                                               |                                             |
-| POST            | `/api/reports/:id/save`                                                          | toggle favorite                             |
-| GET             | `/api/reports/mine/saved`                                                        |                                             |
-| GET             | `/api/categories` (+ admin POST/PUT/DELETE)                                      |                                             |
-| GET/POST/DELETE | `/api/comments`                                                                  |                                             |
-| GET/PUT         | `/api/notifications`                                                             |                                             |
-| GET/PUT/DELETE  | `/api/users`                                                                     | admin                                       |
-| GET             | `/api/dashboard/statistics`                                                      | admin/moderator analytics                   |
+### Authentication
 
-All protected routes expect `Authorization: Bearer <token>`.
+```
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/logout
+GET    /api/auth/me
+POST   /api/auth/forgot-password
+POST   /api/auth/reset-password
+```
 
-## Design notes
+---
 
-Palette: deep civic navy `#16324A`, blue `#2F6690`, teal `#0E7C7B`, green
-`#2F9E44` (resolved), amber `#E8A33D` (priority/CTA), red `#D64545`
-(critical/rejected), on a warm "paper" background `#F6F5F1`. Display type is
-Space Grotesk, body is Inter, and data/stats/status badges use IBM Plex Mono
-to read like stamped municipal paperwork. Report cards are styled as ticket
-stubs with a perforated edge, and status badges render as mono, uppercase
-"stamps" rather than soft pill badges — a nod to the permit-and-ticket
-vocabulary of civic offices, without going full skeuomorphic.
+### Reports
 
-## Known limitations of this scaffold
+```
+GET    /api/reports
+POST   /api/reports
+GET    /api/reports/:id
+PUT    /api/reports/:id
+DELETE /api/reports/:id
+```
 
-- Image uploads are local-disk only until Cloudinary is wired in (fine for local dev, not for multi-instance production).
-- Email is stubbed to console output.
-- No automated test suite included.
-- SQLite is used by default for zero-config setup; swap to Postgres for production per the instructions above.
+---
 
+### Categories
+
+```
+GET
+POST
+PUT
+DELETE
+```
+
+---
+
+### Users
+
+```
+GET
+PUT
+DELETE
+```
+
+---
+
+### Dashboard
+
+```
+GET /api/dashboard/statistics
+```
+
+---
+
+## Demo Accounts
+
+### Administrator
+
+```
+Email:
+admin@civicfix.gov
+
+Password:
+Admin123!
+```
+
+---
+
+### Citizen
+
+```
+Email:
+citizen@example.com
+
+Password:
+Citizen123!
+```
+
+---
+
+## Future Improvements
+
+- Mobile Application
+- Push Notifications
+- Email Notifications
+- Cloudinary Image Storage
+- Socket.IO Real-Time Updates
+- AI Duplicate Report Detection
+- AI Predictive Maintenance
+- Government Department Assignment
+
+---
+
+## Why CivicFix AI?
+
+CivicFix AI helps governments build smarter cities by:
+
+- Improving citizen engagement
+- Increasing government transparency
+- Reducing issue resolution time
+- Supporting data-driven decisions
+- Using Artificial Intelligence for smarter prioritization
+
+---
+
+## Security
+
+- JWT Authentication
+- Password Hashing using bcrypt
+- Role-Based Access Control
+- Protected API Routes
+- Environment Variables
+- SQL Injection Protection with Prisma ORM
+
+---
+
+## License
+
+This project was developed for educational purposes and hackathon participation.
+
+---
+
+## Developer
+
+**Abdullahi Aadan Abdi**
+
+Computer Science Student
+
+SIMAD University
+
+---
+
+## Hackathon Submission
+
+**Project Name:** CivicFix AI
+
+**Category:** Smart Cities • GovTech • Artificial Intelligence
+
+**Built With**
+
+- React
+- Node.js
+- Express
+- Prisma
+- PostgreSQL
+- Supabase
+- OpenAI API
+- Leaflet
+- Tailwind CSS
+- Recharts
